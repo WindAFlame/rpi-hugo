@@ -1,4 +1,4 @@
-# rpi-hugo [![Build Status](http://armbuilder2.hypriot.com/api/badge/github.com/hypriot/rpi-hugo/status.svg?branch=master)](http://armbuilder.hypriot.com/github.com/hypriot/rpi-hugo)
+# rpi-hugo [Fork of hypriot/rpi-hugo](https://github.com/hypriot/rpi-hugo)
 
 Raspberry Pi compatible Docker Image with [Hugo](http://gohugo.io) - a static webpage builder
 
@@ -8,25 +8,32 @@ Raspberry Pi compatible Docker Image with [Hugo](http://gohugo.io) - a static we
 - [Source Repository](https://github.com/hypriot/rpi-hugo)
 - [Dockerfile](https://github.com/hypriot/rpi-hugo/blob/master/Dockerfile)
 
-## Setting up Hugo
+## Setting up Hugo (Updated)
 
 ```bash
 mkdir myblog && cd myblog
-docker run --rm -v $(pwd):/www hypriot/rpi-hugo new site .
+docker run --rm -v $(pwd):/www ew/rpi-hugo new site .
 git clone --recursive --depth 1 https://github.com/spf13/hugoThemes themes
+```
+or you can take a specific theme like this (Here, we want "hugo-inito")
+
+```bash
+mkdir myblog && cd myblog
+docker run --rm -v $(pwd):/www ew/rpi-hugo new site .
+git submodule add https://github.com/miguelsimoni/hugo-initio.git themes/hugo-initio
 ```
 
 ## Create new article
 
 ```bash
-docker run --rm -v $(pwd):/www hypriot/rpi-hugo new post/viral-hit.md
+docker run --rm -v $(pwd):/www ew/rpi-hugo new post/viral-hit.md
 vi content/post/viral-hit.md
 ```
 
 ## Live preview
 
 ```bash
-docker run -d -p 1313:1313 -v $(pwd):/www hypriot/rpi-hugo server -b http://<ip-of-your-rpi>/ --bind=0.0.0.0 -w -D --theme=hyde
+docker run -d -p 1313:1313 -v $(pwd):/www ew/rpi-hugo server -b http://<ip-of-your-rpi>/ --bind=0.0.0.0 -w -D --theme=<theme-name>
 ```
 and on your notebook
 
@@ -37,12 +44,16 @@ open http://<ip-of-your-rpi>:1313
 ## Build final HTML pages
 
 ```bash
-docker run --rm -v $(pwd):/www hypriot/rpi-hugo
+docker run --rm -v $(pwd):/www ew/rpi-hugo
 ```
 
 ## How to create this image
 
 Run all the commands from within the project root directory.
+
+### Update HUGO Version (New)
+
+Before create a new image of this project, you can change the version number of HUGO from this file "VERSION".
 
 ### Build the Docker Image
 ```bash
