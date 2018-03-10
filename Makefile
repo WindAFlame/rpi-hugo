@@ -1,3 +1,4 @@
+NAMESPACE := ew
 IMAGENAME := $(shell basename `git rev-parse --show-toplevel`)
 SHA := $(shell git rev-parse --short HEAD)
 targz_file := $(shell cat FILEPATH)
@@ -5,27 +6,24 @@ timestamp := $(shell date +"%Y%m%d%H%M")
 VERSION :=$(shell cat VERSION)
 #| sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]$//')        	
 
-default: download dockerbuild push
-
-loadS3_and_extract:
-	aws s3 cp s3://$(AWS_BUCKET)/$(targz_file) >./binary.tar.gz
-	mkdir contents/
-	tar xzf binary.tar.gz -C content/
-	ls -la content/
+default: download dockerbuild cleanenv push
 
 download:
-	curl -L https://github.com/spf13/hugo/releases/download/v$(VERSION)/hugo_$(VERSION)_linux_arm.tar.gz > ./binary.tar.gz
+	curl -L https://github.com/gohugoio/hugo/releases/download/v$(VERSION)/hugo_$(VERSION)_linux-arm.tar.gz > ./binary.tar.gz
 	mkdir content/
 	tar xzf binary.tar.gz -C content/
-	cd content && \
-	mv hugo*/hugo* ./hugo
+	cd content
 	ls -la content/
 
 dockerbuild:
 	docker rmi -f $(NAMESPACE)/$(IMAGENAME):bak || true
 	docker tag $(NAMESPACE)/$(IMAGENAME) $(NAMESPACE)/$(IMAGENAME):bak || true
 	docker rmi -f $(NAMESPACE)/$(IMAGENAME) || true
-	docker build -t $(NAMESPACE)/$(IMAGENAME) .
+	docker build -t $(NAMESPACE)/$(IMAGENAME) --build-arg HUGO=$(HUGO_VERSION) --build-arg PORT=1313 .
+
+cleanenv:
+	rm binary.tar.gz
+	rm -rf content
 
 testimg:
 	docker rm -f new-$(IMAGENAME) || true
