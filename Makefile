@@ -44,8 +44,8 @@ endif
 
 hugo-new:
 	$(info Setting up Hugo project in this directory.)
-	@echo Directory = $(shell pwd)
-	docker run --rm -v $(shell pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
+	@echo Directory = $(CURRENT_DIR)
+	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
 	$(info Now you can set a specific theme or get them all with `hugo-themes`.)
 
 hugo-themes:
