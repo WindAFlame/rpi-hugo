@@ -15,7 +15,7 @@ endif
 ifeq ($(wildcard $(EXTRACT_BINARY_NAME)),$(EXTRACT_BINARY_NAME))
 EXTRACT_BINARY_EXIST = false
 endif
-default: nfo
+default: hugo-new
 
 docker-build:
 	$(info Check if dependancies exist.)
@@ -62,19 +62,3 @@ hugo-build:
 hugo-post:
 	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
 	$(info A new post has created in `post/new.md`)
-
-info:
-ifeq ($(wildcard test.md),)
-		@echo OK
-else	
-		@echo KO
-endif
-
-nfo:
-	@echo Version of HUGO is $(HUGO_VERSION)
-	@echo Build port is $(BUILD_PORT) and Live port is $(PORT)
-ifeq ($(wildcard $(BINARY_NAME)),)
-		@echo OK
-else	
-		@echo KO
-endif
