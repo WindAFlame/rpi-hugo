@@ -11,29 +11,28 @@ Raspberry Pi compatible Docker Image with [Hugo](http://gohugo.io) - a static we
 ## Setting up Hugo (Updated)
 
 ```bash
-mkdir myblog && cd myblog
-docker run --rm -v $(pwd):/www ew/rpi-hugo new site .
-git clone --recursive --depth 1 https://github.com/spf13/hugoThemes themes
+make
+make hugo-themes
 ```
-or you can take a specific theme like this (Here, we want "hugo-inito")
+or you can take a specific theme like this (Here, we want "hugo-inito" into the directory by default)
 
 ```bash
-mkdir myblog && cd myblog
-docker run --rm -v $(pwd):/www ew/rpi-hugo new site .
-git submodule add https://github.com/miguelsimoni/hugo-initio.git themes/hugo-initio
+make
+git submodule add https://github.com/miguelsimoni/hugo-initio.git blog/themes/hugo-initio
 ```
 
 ## Create new article
 
 ```bash
-docker run --rm -v $(pwd):/www ew/rpi-hugo new post/viral-hit.md
-vi content/post/viral-hit.md
+make hugo-post
 ```
 
 ## Live preview
 
+### Start
+
 ```bash
-docker run -d -p 1313:1313 -v $(pwd):/www ew/rpi-hugo server -b http://<ip-of-your-rpi>/ --bind=0.0.0.0 -w -D --theme=<theme-name>
+make hugo-live
 ```
 and on your notebook
 
@@ -41,10 +40,16 @@ and on your notebook
 open http://<ip-of-your-rpi>:1313
 ```
 
+### Stop
+
+```bash
+make hugo-live-out
+```
+
 ## Build final HTML pages
 
 ```bash
-docker run --rm -v $(pwd):/www ew/rpi-hugo
+make hugo-build
 ```
 
 ## How to create this image
@@ -57,15 +62,7 @@ Before create a new image of this project, you can change the version number of 
 
 ### Build the Docker Image
 ```bash
-make dockerbuild
-```
-
-#### Push the Docker Image to the Docker Hub
-* First use a `docker login` with username, password and email address
-* Second push the Docker Image to the official Docker Hub
-
-```bash
-make push
+make docker-build
 ```
 
 ## License
