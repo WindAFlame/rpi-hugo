@@ -65,7 +65,7 @@ endif
 
 hugo-live:
 	$(info Launch a live version of your blog on http://$(IP):$(PORT)/.)
-ifeq ($(CONTAINER_NAME),"NO ENTRY")
+ifeq ($(CONTAINER_NAME),NO ENTRY)
 ifeq ($(HUGO_PATH),NO ENTRY)
 		docker run -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
 else
