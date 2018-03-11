@@ -1,5 +1,6 @@
 *~
 Makefile
+Makefile.conf
 .git
 .gitignore
 README.md
