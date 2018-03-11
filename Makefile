@@ -43,21 +43,40 @@ endif
 	rm -rf content
 
 hugo-new:
-	$(info Setting up Hugo project in this directory.)
-	@echo Directory = $(CURRENT_DIR)
-	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
+ifeq ($(HUGO_PATH),NO ENTRY)
+	$(info Setting up Hugo project in $(CURRENT_DIR)/$(HUGO_DIR).)
+	mkdir $(HUGO_DIR)
+	docker run --rm -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
 	$(info Now you can set a specific theme or get them all with `hugo-themes`.)
+else
+	$(info Setting up Hugo project in $(HUGO_PATH)/$(HUGO_DIR).)
+	mkdir -p $(HUGO_PATH)/$(HUGO_DIR)
+	docker run --rm -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
+	$(info Now you can set a specific theme or get them all with `hugo-themes`.)
+endif
 
 hugo-themes:
 	$(info Download all hugo themes for this project.)
-	git clone --recursive --depth 1 https://github.com/gohugoio/hugoThemes themes
+ifeq ($(HUGO_PATH),NO ENTRY)
+	git clone --recursive --depth 1 https://github.com/gohugoio/hugoThemes $(HUGO_DIR)/themes
+else 
+	git clone --recursive --depth 1 https://github.com/gohugoio/hugoThemes $(HUGO_PATH)/$(HUGO_DIR)/themes
+endif
 
 hugo-live:
 	$(info Launch a live version of your blog on http://$(IP):$(PORT)/.)
 ifeq ($(CONTAINER_NAME),"NO ENTRY")
-		docker run -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+ifeq ($(HUGO_PATH),NO ENTRY)
+		docker run -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
 else
-		docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+		docker run -d -p $(PORT):$(BUILD_PORT) -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+endif
+else
+ifeq ($(HUGO_PATH),NO ENTRY)
+		docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+else
+		docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+endif
 endif
 
 hugo-live-out:
@@ -65,8 +84,17 @@ hugo-live-out:
 
 hugo-build:
 	$(info Build your website project into `public`)
-	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME)
+ifeq ($(HUGO_PATH),NO ENTRY)
+		docker run --rm -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME)
+else
+		docker run --rm -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME)
+endif
 
 hugo-post:
-	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
-	$(info A new post has created in `post/new.md`)
+ifeq ($(HUGO_PATH),NO ENTRY)
+	docker run --rm -v $(CURRENT_DIR)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
+	$(info A new post has created in `$(CURRENT_DIR)/$(HUGO_DIR)/content/post/new.md`)
+else
+	docker run --rm -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
+	$(info A new post has created in `$(CURRENT_DIR)/$(HUGO_DIR)/content/post/new.md`)
+endif
