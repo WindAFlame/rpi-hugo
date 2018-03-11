@@ -1,51 +1,80 @@
-NAMESPACE := ew
-IMAGENAME := $(shell basename `git rev-parse --show-toplevel`)
-SHA := $(shell git rev-parse --short HEAD)
-targz_file := $(shell cat FILEPATH)
-timestamp := $(shell date +"%Y%m%d%H%M")
-VERSION :=$(shell cat VERSION)
-#| sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]$//')        	
+CONFIG_FILE := Makefile.conf
+BINARY_NAME := binary.tar.gz
+BINARY_EXIST = false
+EXTRACT_BINARY_NAME = content
+EXTRACT_BINARY_EXIST = false
+# Check config file exist
+ifeq ($(wildcard $(CONFIG_FILE)),)
+$(error $(CONFIG_FILE) not found. See README.md for an issue.)
+endif
+include $(CONFIG_FILE)
+# It's loaded, we can work
+ifeq ($(wildcard $(BINARY_NAME)),$(BINARY_NAME))
+BINARY_EXIST = true
+endif
+ifeq ($(wildcard $(EXTRACT_BINARY_NAME)),$(EXTRACT_BINARY_NAME))
+EXTRACT_BINARY_EXIST = false
+endif
+default: nfo
 
-default: download dockerbuild cleanenv push
-
-download:
-	curl -L https://github.com/gohugoio/hugo/releases/download/v$(VERSION)/hugo_$(VERSION)_linux-arm.tar.gz > ./binary.tar.gz
-	mkdir content/
-	tar xzf binary.tar.gz -C content/
-	cd content
-	ls -la content/
-
-dockerbuild:
-	docker rmi -f $(NAMESPACE)/$(IMAGENAME):bak || true
-	docker tag $(NAMESPACE)/$(IMAGENAME) $(NAMESPACE)/$(IMAGENAME):bak || true
-	docker rmi -f $(NAMESPACE)/$(IMAGENAME) || true
-	docker build -t $(NAMESPACE)/$(IMAGENAME) --build-arg HUGO=$(HUGO_VERSION) --build-arg PORT=1313 .
-
-cleanenv:
-	rm binary.tar.gz
+docker-build:
+	$(info Check if dependancies exist.)
+ifeq ($(wildcard $(EXTRACT_BINARY_NAME)),$(EXTRACT_BINARY_NAME))
+		$(info Directory exist ! We can continue.)
+else
+ifeq ($(wildcard $(BINARY_NAME)),)
+			$(info Not exist. Download library for install Hugo v$(HUGO_VERSION) in the docker image.)
+			curl -L https://github.com/gohugoio/hugo/releases/download/v$(HUGO_VERSION)/hugo_$(HUGO_VERSION)_linux-arm.tar.gz > ./$(BINARY_NAME)
+else
+			$(info File exist ! We can continue.)
+endif
+		mkdir $(EXTRACT_BINARY_NAME)/
+		tar xzf $(BINARY_NAME) -C $(EXTRACT_BINARY_NAME)/
+		rm $(BINARY_NAME)
+		cd $(EXTRACT_BINARY_NAME)
+		ls -la $(EXTRACT_BINARY_NAME)/
+endif
+	$(info Start process for the image build)
+	docker rmi -f $(NAMESPACE)/$(IMAGE_NAME):bak || true
+	docker tag $(NAMESPACE)/$(IMAGE_NAME) $(NAMESPACE)/$(IMAGE_NAME):bak || true
+	docker rmi -f $(NAMESPACE)/$(IMAGE_NAME) || true
+	docker build -t $(NAMESPACE)/$(IMAGE_NAME) --build-arg HUGO=$(HUGO_VERSION) --build-arg PORT=$(BUILD_PORT) .
 	rm -rf content
 
-testimg:
-	docker rm -f new-$(IMAGENAME) || true
-	docker run -d --name new-$(IMAGENAME) $(NAMESPACE)/$(IMAGENAME):latest
-	docker inspect -f '{{.NetworkSettings.IPAddress}}' new-$(IMAGENAME)
-	docker logs -f new-$(IMAGENAME)
+hugo-new:
+	$(info Setting up Hugo project.)
+	mkdir myblog && cd myblog
+	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
+	$(info Now you can set a specific theme or get them all with `hugo-themes`.)
 
-push:
-	# push VERSION
-	docker tag -f $(NAMESPACE)/$(IMAGENAME):latest $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(VERSION)
-	docker push $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(VERSION)
-	docker rmi $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(VERSION) || true
-	# push commit SHA
-	docker tag -f $(NAMESPACE)/$(IMAGENAME):latest $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(SHA)
-	docker push $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(SHA)
-	docker rmi $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(SHA) || true
-	# push timestamp
-	docker tag -f $(NAMESPACE)/$(IMAGENAME):latest $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(timestamp)
-	docker push $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(timestamp)
-	docker rmi $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):$(timestamp) || true
-	# push latest
-	docker tag -f $(NAMESPACE)/$(IMAGENAME):latest $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):latest
-	docker push $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):latest
-	docker rmi $(REGISTRY_URL)/$(NAMESPACE)/$(IMAGENAME):latest || true
-                        	
+hugo-themes:
+	$(info Download all hugo themes for this project.)
+	git clone --recursive --depth 1 https://github.com/spf13/hugoThemes themes
+
+hugo-live:
+	$(info Launch a live version of your blog on http://$(IP):$(PORT)/.)
+	docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+
+hugo-build:
+	$(info Build your website project into `public`)
+	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME)
+
+hugo-post:
+	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
+	$(info A new post has created in `post/new.md`)
+
+info:
+ifeq ($(wildcard test.md),)
+		@echo OK
+else	
+		@echo KO
+endif
+
+nfo:
+	@echo Version of HUGO is $(HUGO_VERSION)
+	@echo Build port is $(BUILD_PORT) and Live port is $(PORT)
+ifeq ($(wildcard $(BINARY_NAME)),)
+		@echo OK
+else	
+		@echo KO
+endif
