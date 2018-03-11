@@ -1,8 +1,9 @@
 CONFIG_FILE := Makefile.conf
 BINARY_NAME := binary.tar.gz
 BINARY_EXIST = false
-EXTRACT_BINARY_NAME = content
+EXTRACT_BINARY_NAME := content
 EXTRACT_BINARY_EXIST = false
+CURRENT_DIR := $(shell pwd)
 # Check config file exist
 ifeq ($(wildcard $(CONFIG_FILE)),)
 $(error $(CONFIG_FILE) not found. See README.md for an issue.)
@@ -42,23 +43,30 @@ endif
 	rm -rf content
 
 hugo-new:
-	$(info Setting up Hugo project.)
-	mkdir myblog && cd myblog
-	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
+	$(info Setting up Hugo project in this directory.)
+	@echo Directory = $(shell pwd)
+	docker run --rm -v $(shell pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new site .
 	$(info Now you can set a specific theme or get them all with `hugo-themes`.)
 
 hugo-themes:
 	$(info Download all hugo themes for this project.)
-	git clone --recursive --depth 1 https://github.com/spf13/hugoThemes themes
+	git clone --recursive --depth 1 https://github.com/gohugoio/hugoThemes themes
 
 hugo-live:
 	$(info Launch a live version of your blog on http://$(IP):$(PORT)/.)
-	docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+ifeq ($(CONTAINER_NAME),"NO ENTRY")
+		docker run -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+else
+		docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(PORT)/ --bind=0.0.0.0 -w -D --theme=$(THEME_NAME)
+endif
+
+hugo-live-out:
+	docker stop $(CONTAINER_NAME)
 
 hugo-build:
 	$(info Build your website project into `public`)
-	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME)
+	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME)
 
 hugo-post:
-	docker run --rm -v $(pwd):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
+	docker run --rm -v $(CURRENT_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) new post/new.md
 	$(info A new post has created in `post/new.md`)
