@@ -36,6 +36,7 @@ By default, we have the following configuration :
 - Use the following hugo version when the docker image is build : 0.37.1.
 
 - Deploy the live preview on this url http://127.0.0.1:1313/.
+ Here, you need to put your network address. Without that, your website will not loaded as expected.
 
 - Store your hugo project in $(pwd)/blog.
 
