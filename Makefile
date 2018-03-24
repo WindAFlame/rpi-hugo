@@ -49,7 +49,7 @@ docker-prompt:
 
 docker-run:
 	$(info Launch a live version of your blog on http://$(IP):$(PORT)/.)
-	docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D --theme=$(HUGO_THEME)
+	docker run --name $(CONTAINER_NAME) -d -p $(PORT):$(BUILD_PORT) -v $(HUGO_PATH)/$(HUGO_DIR):/www $(NAMESPACE)/$(IMAGE_NAME) server -b http://$(IP)/ --bind=0.0.0.0 -w -D
 
 hugo-new:
 	$(info Setting up Hugo project in $(HUGO_PATH)/$(HUGO_DIR).)
@@ -66,6 +66,8 @@ hugo-live: docker-run docker-logs
 hugo-live-out:
 	docker stop $(CONTAINER_NAME) || true
 	docker rm $(CONTAINER_NAME)
+
+hugo-live-restart: hugo-live-out hugo-live
 
 hugo-build:
 	$(info Build your website project into `public`)
