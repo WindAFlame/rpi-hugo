@@ -5,7 +5,6 @@ FROM hypriot/rpi-alpine:3.6
 LABEL maintainer="dev.windaflame@gmail.com" 
 
 ARG HUGO
-ARG PORT
 ENV ALPINE=3.6
 LABEL version="alpine linux version: ${ALPINE}\r\nhugo version: ${HUGO}"
  
