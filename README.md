@@ -31,7 +31,6 @@ By default, we have the following configuration :
 
 ```
 - Build a docker image with this name : ew/rpi-hugo.
- This image expose the 1313 port for live preview.
  
 - Use the following hugo version when the docker image is build : 0.37.1.
 
@@ -93,7 +92,7 @@ make hugo-live
 and on your notebook
 
 ```bash
-open http://<ip-of-your-rpi>:1313
+open http://<ip-of-your-rpi>:<port-defined-in-conf>
 ```
 
 ### Stop
