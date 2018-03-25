@@ -18,4 +18,3 @@ rm -rf /var/cache/apk/*
 ADD content/hugo /usr/local/bin/hugo
 WORKDIR /www/
 ENTRYPOINT ["hugo"]
-EXPOSE ${PORT}
