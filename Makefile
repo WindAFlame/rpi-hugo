@@ -38,7 +38,7 @@ endif
 	docker rmi -f $(NAMESPACE)/$(IMAGE_NAME):bak || true
 	docker tag $(NAMESPACE)/$(IMAGE_NAME) $(NAMESPACE)/$(IMAGE_NAME):bak || true
 	docker rmi -f $(NAMESPACE)/$(IMAGE_NAME) || true
-	docker build -t $(NAMESPACE)/$(IMAGE_NAME) --build-arg HUGO=$(HUGO_VERSION) --build-arg PORT=$(BUILD_PORT) .
+	docker build -t $(NAMESPACE)/$(IMAGE_NAME) --build-arg HUGO=$(HUGO_VERSION) .
 	rm -rf content
 
 docker-logs:
